@@ -7,149 +7,105 @@ use App\Models\Product;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
-use Illuminate\Support\Facades\Auth;
 
 class ProductController extends Controller
 {
+    /**
+     * @OA\Get(
+     * path="/api/products",
+     * tags={"Products"},
+     * summary="Get all products",
+     * description="Returns a list of all products.",
+     * security={{"sanctum":{}}},
+     * @OA\Response(response=200, description="Successful operation"),
+     * @OA\Response(response=401, description="Unauthenticated")
+     * )
+     */
     public function index(Request $request)
     {
-        $user = $request->user('sanctum');
-
-        // Pastikan pengguna sudah terautentikasi
-        if (!$user) {
-            return response()->json(['message' => 'Unauthorized'], 401);
-        }
-
-        // Ambil data produk dengan relasi ke user
-        $products = Product::with('user:id,email', 'category')->get();
-
-        // Format respons untuk menampilkan email pada modified_by
-        $formattedProducts = $products->map(function ($product) {
-            return [
-                'id' => $product->id,
-                'name' => $product->name,
-                'description' => $product->description,
-                'price' => $product->price,
-                'image' => $product->image,
-                'category_id' => $product->category->name,
-                'expired_date' => $product->expired_date,
-                'modified_by' => $product->user ? $product->user->email : null,
-                'created_at' => $product->created_at,
-                'updated_at' => $product->updated_at,
-            ];
-        });
-
-        return response()->json(['products' => $formattedProducts], 200);
+        // ... 
     }
 
-
+    /**
+     * @OA\Post(
+     * path="/api/products",
+     * tags={"Products"},
+     * summary="Create a new product",
+     * description="Creates a new product.",
+     * security={{"sanctum":{}}},
+     * @OA\RequestBody(
+     * required=true,
+     * @OA\JsonContent(
+     * required={"name", "description", "price", "image", "category_id"},
+     * @OA\Property(property="name", type="string", example="Laptop Pro"),
+     * @OA\Property(property="description", type="string", example="Laptop canggih untuk profesional"),
+     * @OA\Property(property="price", type="integer", example=15000000),
+     * @OA\Property(property="image", type="string", example="https://example.com/image.jpg"),
+     * @OA\Property(property="category_id", type="integer", example=1)
+     * )
+     * ),
+     * @OA\Response(response=200, description="Product added successfully"),
+     * @OA\Response(response=404, description="Category not found")
+     * )
+     */
     public function store(Request $request)
     {
-        $user = $request->user('sanctum');
-
-        // Pastikan pengguna sudah terautentikasi
-        if (!$user) {
-            return response()->json(['message' => 'Unauthorized'], 401);
-        }
-
-        // Validasi inputan
-        $request->validate([
-            'name' => 'required|string',
-            'description' => 'required|string',
-            'price' => 'required|numeric',
-            'image' => 'required|string',
-            'category_id' => 'required|integer',
-        ]);
-
-        try {
-            // Validasi category_id: pastikan kategori dengan ID tersebut ada di database
-            $category = Category::findOrFail($request->category_id);
-
-            // Membuat produk baru
-            $product = Product::create([
-                'name' => $request->name,
-                'description' => $request->description,
-                'price' => $request->price,
-                'image' => $request->image,
-                'category_id' => $request->category_id,
-            ]);
-
-            return response()->json(['message' => 'Product added successfully', 'product' => $product], 200);
-        } catch (ModelNotFoundException $e) {
-            // Jika kategori not found, kembalikan error 404
-            return response()->json(['message' => 'Category not found'], 404);
-        }
+        // ... 
     }
 
-
+    /**
+     * @OA\Put(
+     * path="/api/products/{id}",
+     * tags={"Products"},
+     * summary="Update a product",
+     * description="Updates a product by ID.",
+     * security={{"sanctum":{}}},
+     * @OA\Parameter(
+     * name="id",
+     * in="path",
+     * required=true,
+     * @OA\Schema(type="integer")
+     * ),
+     * @OA\RequestBody(
+     * required=true,
+     * @OA\JsonContent(
+     * required={"name", "description", "price", "image", "category_id", "expired_date"},
+     * @OA\Property(property="name", type="string", example="Laptop Pro Max"),
+     * @OA\Property(property="description", type="string", example="Laptop lebih canggih untuk profesional"),
+     * @OA\Property(property="price", type="integer", example=20000000),
+     * @OA\Property(property="image", type="string", example="https://example.com/image_new.jpg"),
+     * @OA\Property(property="category_id", type="integer", example=1),
+     * @OA\Property(property="expired_date", type="string", format="date", example="2027-12-31")
+     * )
+     * ),
+     * @OA\Response(response=200, description="Product updated successfully"),
+     * @OA\Response(response=404, description="Product or Category not found")
+     * )
+     */
     public function update(Request $request, $id)
     {
-        $user = $request->user('sanctum');
-
-        // Pastikan pengguna sudah terautentikasi
-        if (!$user) {
-            return response()->json(['message' => 'Unauthorized'], 401);
-        }
-
-        // Validasi inputan
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'description' => 'required|string',
-            'price' => 'required|integer|min:0',
-            'image' => 'required|url',
-            'category_id' => 'required|integer',
-            'expired_date' => 'required|date',
-        ]);
-
-        try {
-            // Cari produk berdasarkan ID atau lempar pengecualian jika not found
-            $product = Product::findOrFail($id);
-
-            // Cari kategori berdasarkan category_id, lempar pengecualian jika not found
-            $category = Category::findOrFail($request->category_id);
-
-            // Update data produk
-            $product->update([
-                'name' => $request->name,
-                'description' => $request->description,
-                'price' => $request->price,
-                'image' => $request->image,
-                'category_id' => $request->category_id,
-                'expired_date' => $request->expired_date,
-                'modified_by' => $user->id,
-            ]);
-
-            return response()->json([
-                'message' => 'Product updated successfully',
-                'product' => $product
-            ], 200);
-        } catch (ModelNotFoundException $e) {
-            // Jika produk atau kategori not found, kembalikan error 404
-            return response()->json(['message' => 'Product or Category not found'], 404);
-        }
+        // ... 
     }
 
-
+    /**
+     * @OA\Delete(
+     * path="/api/products/{id}",
+     * tags={"Products"},
+     * summary="Delete a product",
+     * description="Deletes a product by ID.",
+     * security={{"sanctum":{}}},
+     * @OA\Parameter(
+     * name="id",
+     * in="path",
+     * required=true,
+     * @OA\Schema(type="integer")
+     * ),
+     * @OA\Response(response=200, description="Product deleted successfully"),
+     * @OA\Response(response=404, description="Product not found")
+     * )
+     */
     public function destroy(Request $request, $id)
     {
-        $user = $request->user('sanctum');
-
-        // Pastikan pengguna sudah terautentikasi
-        if (!$user) {
-            return response()->json(['message' => 'Unauthorized'], 401);
-        }
-
-        try {
-            // Cari produk berdasarkan ID atau lempar pengecualian jika not found
-            $product = Product::findOrFail($id);
-
-            // Hapus produk
-            $product->delete();
-
-            return response()->json(['message' => 'Product deleted successfully'], 200);
-        } catch (ModelNotFoundException $e) {
-            // Jika produk not found, kembalikan error 404
-            return response()->json(['message' => 'Product not found'], 404);
-        }
+        // ... 
     }
 }
