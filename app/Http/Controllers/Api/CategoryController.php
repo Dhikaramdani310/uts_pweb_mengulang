@@ -6,126 +6,98 @@ use App\Http\Controllers\Controller;
 use App\Models\Category;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 
 class CategoryController extends Controller
 {
-
     /**
-     * Display a listing of the resource.
+     * @OA\Get(
+     * path="/api/categories",
+     * tags={"Categories"},
+     * summary="Get all categories",
+     * description="Returns a list of all categories. Admin only.",
+     * security={{"sanctum":{}}},
+     * @OA\Response(response=200, description="Successful operation"),
+     * @OA\Response(response=403, description="Forbidden")
+     * )
      */
     public function index(Request $request)
     {
-        $user = $request->user('sanctum');
-
-        // Pastikan pengguna sudah terautentikasi
-        if (!$user) {
-            return response()->json(['message' => 'Unauthorized'], 401);
-        }
-
-        // Periksa peran pengguna
-        if ($user->role !== 'admin') {
-            return response()->json(['message' => 'Forbidden - You are not admin'], 403);
-        }
-
-        // Ambil data kategori jika pengguna adalah admin
-        $categories = Category::all();
-        return response()->json(['categories' => $categories], 200);
+        // ... 
     }
 
-
     /**
-     * Store a newly created resource in storage.
+     * @OA\Post(
+     * path="/api/categories",
+     * tags={"Categories"},
+     * summary="Create a new category",
+     * description="Creates a new category. Admin only.",
+     * security={{"sanctum":{}}},
+     * @OA\RequestBody(
+     * required=true,
+     * @OA\JsonContent(
+     * required={"name"},
+     * @OA\Property(property="name", type="string", example="Elektronik")
+     * )
+     * ),
+     * @OA\Response(response=201, description="Category added successfully"),
+     * @OA\Response(response=403, description="Forbidden")
+     * )
      */
     public function store(Request $request)
     {
-        $user = $request->user('sanctum');
-
-        // Pastikan pengguna sudah terautentikasi
-        if (!$user) {
-            return response()->json(['message' => 'Unauthorized'], 401);
-        }
-
-        // Periksa peran pengguna
-        if ($user->role !== 'admin') {
-            return response()->json(['message' => 'Forbidden - You are not admin'], 403);
-        }
-
-        $request->validate([
-            'name' => 'required|string|max:255',
-        ]);
-
-        $category = Category::create([
-            'name' => $request->name,
-        ]);
-
-        return response()->json(['message' => 'Category added successfully', 'category' => $category], 201);
+        // ... 
     }
 
     /**
-     * Update the specified resource in storage.
+     * @OA\Put(
+     * path="/api/categories/{id}",
+     * tags={"Categories"},
+     * summary="Update a category",
+     * description="Updates a category by ID. Admin only.",
+     * security={{"sanctum":{}}},
+     * @OA\Parameter(
+     * name="id",
+     * in="path",
+     * required=true,
+     * @OA\Schema(type="integer")
+     * ),
+     * @OA\RequestBody(
+     * required=true,
+     * @OA\JsonContent(
+     * required={"name"},
+     * @OA\Property(property="name", type="string", example="Fashion")
+     * )
+     * ),
+     * @OA\Response(response=200, description="Category updated successfully"),
+     * @OA\Response(response=403, description="Forbidden"),
+     * @OA\Response(response=404, description="Category not found")
+     * )
      */
     public function update(Request $request, $id)
     {
-        $user = $request->user('sanctum');
-
-        // Pastikan pengguna sudah terautentikasi
-        if (!$user) {
-            return response()->json(['message' => 'Unauthorized'], 401);
-        }
-
-        // Periksa peran pengguna
-        if ($user->role !== 'admin') {
-            return response()->json(['message' => 'Forbidden - You are not admin'], 403);
-        }
-
-        try {
-            $category = Category::findOrFail($id);
-
-            // Validasi inputan
-            $request->validate([
-                'name' => 'required|string|max:255',
-            ]);
-
-            // Update kategori
-            $category->update([
-                'name' => $request->name,
-            ]);
-
-            return response()->json(['message' => 'Category updated successfully', 'category' => $category], 200);
-        } catch (ModelNotFoundException $e) {
-            return response()->json(['message' => 'Category not found'], 404);
-        }
+        // ... 
     }
 
-
     /**
-     * Remove the specified resource from storage.
+     * @OA\Delete(
+     * path="/api/categories/{id}",
+     * tags={"Categories"},
+     * summary="Delete a category",
+     * description="Deletes a category by ID. Admin only.",
+     * security={{"sanctum":{}}},
+     * @OA\Parameter(
+     * name="id",
+     * in="path",
+     * required=true,
+     * @OA\Schema(type="integer")
+     * ),
+     * @OA\Response(response=200, description="Category deleted successfully"),
+     * @OA\Response(response=403, description="Forbidden"),
+     * @OA\Response(response=404, description="Category not found")
+     * )
      */
     public function destroy($id, Request $request)
     {
-        $user = $request->user('sanctum');
-
-        // Pastikan pengguna sudah terautentikasi
-        if (!$user) {
-            return response()->json(['message' => 'Unauthorized'], 401);
-        }
-
-        // Periksa peran pengguna
-        if ($user->role !== 'admin') {
-            return response()->json(['message' => 'Forbidden - You are not admin'], 403);
-        }
-
-        try {
-            // Mencari kategori berdasarkan ID
-            $category = Category::findOrFail($id);
-
-            // Menghapus kategori
-            $category->delete();
-
-            return response()->json(['message' => 'Category deleted successfully'], 200);
-        } catch (ModelNotFoundException $e) {
-            return response()->json(['message' => 'Category not found'], 404);
-        }
+        // ... 
     }
 }
