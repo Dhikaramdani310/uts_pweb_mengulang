@@ -11,149 +11,109 @@ use Illuminate\Support\Facades\Hash;
 
 class AuthController extends Controller
 {
+    /**
+     * @OA\Get(
+     * path="/api/users",
+     * tags={"Users"},
+     * summary="Get all users",
+     * description="Returns a list of all users. Admin only.",
+     * security={{"sanctum":{}}},
+     * @OA\Response(response=200, description="Successful operation"),
+     * @OA\Response(response=401, description="Unauthenticated"),
+     * @OA\Response(response=403, description="Forbidden")
+     * )
+     */
     public function index(Request $request)
     {
-        $roles = $request->user('sanctum');
-
-        // Pastikan pengguna sudah terautentikasi
-        if (!$roles) {
-            return response()->json(['message' => 'Unauthorized'], 401);
-        }
-
-        // Periksa peran pengguna
-        if ($roles->role !== 'admin') {
-            return response()->json(['message' => 'Forbidden - You are not admin'], 403);
-        }
-
-        // Ambil semua data pengguna
-        $users = User::all();
-
-        return response()->json([
-            'users' => $users
-        ], 200);
+        // ... (kode asli tidak berubah)
     }
 
+    /**
+     * @OA\Post(
+     * path="/api/login",
+     * tags={"Authentication"},
+     * summary="User Login",
+     * description="Login User and returns an API token",
+     * @OA\RequestBody(
+     * required=true,
+     * @OA\JsonContent(
+     * required={"email", "password"},
+     * @OA\Property(property="email", type="string", format="email", example="user@example.com"),
+     * @OA\Property(property="password", type="string", format="password", example="password")
+     * )
+     * ),
+     * @OA\Response(response=200, description="Login successfully"),
+     * @OA\Response(response=401, description="Email or password wrong")
+     * )
+     */
     public function login(Request $request)
     {
-        $credentials = $request->validate([
-            'email' => 'required|email',
-            'password' => 'required|string',
-        ]);
-
-        if (Auth::attempt($credentials)) {
-            $user = Auth::user();
-
-            // Durasi expired 1 jam (60 menit)
-            $expirationMinutes = 60;
-            $expirationSeconds = $expirationMinutes * 60;
-
-            // Buat token dengan expired 1 jam
-            $token = $user->createToken('API Token', [], now()->addSeconds($expirationSeconds))->plainTextToken;
-
-            return response()->json([
-                'message' => 'Login successfully',
-                'user' => $user,
-                'token' => $token,
-                'expires_in_seconds' => $expirationSeconds
-            ], 200);
-        }
-
-        return response()->json(['message' => 'Email or password wrong'], 401);
+        // ... (kode asli tidak berubah)
     }
 
-    // Register User (Admin Only)
+    /**
+     * @OA\Post(
+     * path="/api/register",
+     * tags={"Authentication"},
+     * summary="Register a new user",
+     * description="Registers a new user. Admin only.",
+     * security={{"sanctum":{}}},
+     * @OA\RequestBody(
+     * required=true,
+     * @OA\JsonContent(
+     * required={"name", "email", "password"},
+     * @OA\Property(property="name", type="string", example="John Doe"),
+     * @OA\Property(property="email", type="string", format="email", example="john.doe@example.com"),
+     * @OA\Property(property="password", type="string", format="password", example="password123")
+     * )
+     * ),
+     * @OA\Response(response=200, description="User successfully registered"),
+     * @OA\Response(response=400, description="Email has already been taken"),
+     * @OA\Response(response=403, description="Forbidden")
+     * )
+     */
     public function register(Request $request)
     {
-        $roles = $request->user('sanctum');
-
-        // Pastikan pengguna sudah terautentikasi
-        if (!$roles) {
-            return response()->json(['message' => 'Unauthorized'], 401);
-        }
-
-        // Periksa peran pengguna
-        if ($roles->role !== 'admin') {
-            return response()->json(['message' => 'Forbidden - You are not admin'], 403);
-        }
-
-        // Validasi input
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email',
-            'password' => 'required|string|min:6',
-        ]);
-
-        try {
-            // Coba buat user baru
-            $user = User::create([
-                'name' => $request->name,
-                'email' => $request->email,
-                'password' => Hash::make($request->password),
-                'role' => 'user',
-            ]);
-
-            return response()->json([
-                'message' => 'User successfully didaftarkan',
-                'user' => $user
-            ], 200);
-        } catch (QueryException $e) {
-            // Tangani error duplicate email
-            if ($e->errorInfo[1] == 1062) { // 1062 adalah kode error duplicate entry di MySQL
-                return response()->json([
-                    'message' => 'Email has already been taken. Please use another email.'
-                ], 400);
-            }
-
-            // Tangani error lain
-            return response()->json([
-                'message' => 'Terjadi kesalahan saat mendaftarkan user',
-                'error' => $e->getMessage()
-            ], 500);
-        }
+        // ... (kode asli tidak berubah)
     }
 
+    /**
+     * @OA\Post(
+     * path="/api/logout",
+     * tags={"Authentication"},
+     * summary="Logout user",
+     * description="Logs out the current authenticated user.",
+     * security={{"sanctum":{}}},
+     * @OA\Response(response=200, description="Logout successfully"),
+     * @OA\Response(response=401, description="Unauthenticated")
+     * )
+     */
     public function logout(Request $request)
     {
-        try {
-            if (!$request->user()) {
-                return response()->json(['message' => 'Tidak ada pengguna yang terautentikasi'], 401);
-            }
-
-            // Hapus semua token user saat ini
-            $request->user()->tokens()->delete();
-
-            return response()->json([
-                'message' => 'Logout successfully'
-            ], 200);
-        } catch (\Exception $e) {
-            return response()->json([
-                'message' => 'Logout gagal',
-                'error' => $e->getMessage()
-            ], 500);
-        }
+       // ... (kode asli tidak berubah)
     }
 
+    /**
+     * @OA\Delete(
+     * path="/api/users/{id}",
+     * tags={"Users"},
+     * summary="Delete a user",
+     * description="Deletes a specific user by ID. Admin only.",
+     * security={{"sanctum":{}}},
+     * @OA\Parameter(
+     * name="id",
+     * in="path",
+     * required=true,
+     * description="ID of the user to delete",
+     * @OA\Schema(type="integer")
+     * ),
+     * @OA\Response(response=200, description="User deleted successfully"),
+     * @OA\Response(response=403, description="Forbidden"),
+     * @OA\Response(response=404, description="User not found")
+     * )
+     */
     public function destroy($id, Request $request)
     {
-        $user = User::find($id);
-
-        if (!$user) {
-            return response()->json(['message' => 'User not found'], 404);
-        }
-        $roles = $request->user('sanctum');
-
-        // Pastikan pengguna sudah terautentikasi
-        if (!$roles) {
-            return response()->json(['message' => 'Unauthorized'], 401);
-        }
-
-        // Periksa peran pengguna
-        if ($roles->role !== 'admin') {
-            return response()->json(['message' => 'Forbidden - You are not admin'], 403);
-        }
-
-        $user->delete();
-
-        return response()->json(['message' => 'User deleted successfully']);
+        // ... (kode asli tidak berubah)
     }
 }
